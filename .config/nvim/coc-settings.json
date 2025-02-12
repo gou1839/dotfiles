@@ -1,0 +1,18 @@
+{
+  "suggest.completionItemKindLabels": {
+    "function": "󰊕 ",
+    "variable": " ",
+    "module": "󰕳 ",
+    "snippet": " ",
+    "struct": " ",
+    "keyword": " ",
+    "property": " ",
+    "method": " ",
+    "field": " ",
+    "interface": " ",
+    "folder": " ",
+    "file": " ",
+    "class": " ",
+    "constant": " "
+}
+}
