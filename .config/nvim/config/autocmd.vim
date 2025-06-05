@@ -7,19 +7,6 @@ augroup terminal_settings
   autocmd VimEnter * wincmd p
 augroup END
 
-function! SmartTerminalStart()
-  " ファイルが指定されていない、かつディレクトリが指定されている場合のみターミナルを開く
-  if argc() == 0
-    call TerminalSplitWithCD()
-    wincmd p
-  endif
-endfunction
-
-augroup smart_terminal_start
-  autocmd!
-  autocmd VimEnter * call SmartTerminalStart()
-augroup END
-
 augroup close_all_windows
   autocmd!
   " バッファを閉じる前に他のウィンドウも:qで閉じる

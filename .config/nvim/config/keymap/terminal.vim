@@ -1,8 +1,7 @@
 " ターミナル関連のキーマッピング
 
 " ターミナルを開く
-nnoremap <silent> tt <cmd>call TerminalOpenWithCD()<CR>
-nnoremap <silent> tx <cmd>call TerminalSplitWithCD()<CR>
+nnoremap <silent> tt <cmd>call TerminalSplitWithCD()<CR>
 
 
 " ターミナルモードのマッピング
