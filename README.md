@@ -21,7 +21,7 @@ dotfiles/
 ### 1. リポジトリをクローン
 
 ```bash
-git clone <your-dotfiles-repo> ~/dotfiles
+git clone https://github.com/gou1839/dotfiles.git
 cd ~/dotfiles
 ```
 
