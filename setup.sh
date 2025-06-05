@@ -6,7 +6,9 @@ DOTFILES_DIR="$HOME/dotfiles"
 ln -sf "$DOTFILES_DIR/zsh/.zshenv" "$HOME/.zshenv"
 ln -sf "$DOTFILES_DIR/zsh/.zprofile" "$HOME/.zprofile"
 ln -sf "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
-ln -sf "$DOTFILES_DIR/zsh/.zlogout" "$HOME/.zlogout"
+
+# Powerlevel10kの設定ファイル
+ln -sf "$DOTFILES_DIR/.p10k.zsh" "$HOME/.p10k.zsh"
 
 # .configディレクトリが存在しない場合は作成
 mkdir -p "$HOME/.config"
