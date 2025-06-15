@@ -120,8 +120,126 @@ main() {
     echo
     
     # 総ステップ数
-    TOTAL_STEPS=6
+    TOTAL_STEPS=12  # 追加パッケージのインストールステップを追加
     CURRENT_STEP=0
+    
+    # Homebrewのインストール
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    progress_bar $CURRENT_STEP $TOTAL_STEPS
+    echo
+    log_info "Checking Homebrew installation..."
+    
+    if ! command -v brew &> /dev/null; then
+        log_info "Installing Homebrew..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &
+        spinner $!
+        
+        if [ $? -eq 0 ]; then
+            log_success "Homebrew installed successfully"
+        else
+            log_error "Failed to install Homebrew"
+            exit 1
+        fi
+    else
+        log_success "Homebrew is already installed"
+    fi
+    
+    # zplugのインストール
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    progress_bar $CURRENT_STEP $TOTAL_STEPS
+    echo
+    log_info "Checking zplug installation..."
+    
+    if [ ! -d "$HOME/.zplug" ]; then
+        log_info "Installing zplug..."
+        curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh &
+        spinner $!
+        
+        if [ $? -eq 0 ]; then
+            log_success "zplug installed successfully"
+            log_info "Other zsh plugins will be installed automatically via .zshrc"
+        else
+            log_error "Failed to install zplug"
+            exit 1
+        fi
+    else
+        log_success "zplug is already installed"
+    fi
+    
+    # Neovimのインストール
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    progress_bar $CURRENT_STEP $TOTAL_STEPS
+    echo
+    log_info "Checking Neovim installation..."
+    
+    if ! command -v nvim &> /dev/null; then
+        log_info "Installing Neovim..."
+        brew install neovim &
+        spinner $!
+        
+        if [ $? -eq 0 ]; then
+            log_success "Neovim installed successfully"
+        else
+            log_error "Failed to install Neovim"
+            exit 1
+        fi
+    else
+        log_success "Neovim is already installed"
+    fi
+    
+    # Jetpackのインストール
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    progress_bar $CURRENT_STEP $TOTAL_STEPS
+    echo
+    log_info "Checking Jetpack installation..."
+    
+    if [ ! -f "$HOME/.local/share/nvim/site/pack/jetpack/opt/vim-jetpack/plugin/jetpack.vim" ]; then
+        log_info "Installing Jetpack..."
+        curl -fLo ~/.local/share/nvim/site/pack/jetpack/opt/vim-jetpack/plugin/jetpack.vim --create-dirs https://raw.githubusercontent.com/tani/vim-jetpack/master/plugin/jetpack.vim &
+        spinner $!
+        
+        if [ $? -eq 0 ]; then
+            log_success "Jetpack installed successfully"
+            log_info "Other Neovim plugins will be installed automatically via init.lua"
+        else
+            log_error "Failed to install Jetpack"
+            exit 1
+        fi
+    else
+        log_success "Jetpack is already installed"
+    fi
+    
+    # コマンドラインツールのインストール
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    progress_bar $CURRENT_STEP $TOTAL_STEPS
+    echo
+    log_info "Installing command line tools..."
+    
+    brew install lsd bat gh nvm rbenv sshuttle git docker &
+    spinner $!
+    
+    if [ $? -eq 0 ]; then
+        log_success "Command line tools installed successfully"
+    else
+        log_error "Failed to install command line tools"
+        exit 1
+    fi
+    
+    # Rancher Desktopのインストール
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    progress_bar $CURRENT_STEP $TOTAL_STEPS
+    echo
+    log_info "Installing Rancher Desktop..."
+    
+    brew install --cask rancher &
+    spinner $!
+    
+    if [ $? -eq 0 ]; then
+        log_success "Rancher Desktop installed successfully"
+    else
+        log_error "Failed to install Rancher Desktop"
+        exit 1
+    fi
     
     # zshの設定ファイルのシンボリックリンク作成
     log_info "Setting up Zsh configuration files..."

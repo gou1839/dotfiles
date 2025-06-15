@@ -29,6 +29,8 @@ zplug "mrowa44/emojify", as:command        # 絵文字サポート
 zplug "agkozak/zsh-z"                      # ディレクトリ移動
 zplug "romkatv/powerlevel10k", as:theme, depth:1
 zplug "dracula/zsh", as:theme
+zplug "ali-commits/zsh-abbr"
+
 
 # プラグインのインストール
 if ! zplug check --verbose; then
@@ -47,7 +49,6 @@ SAVEHIST=10000
 alias zshrc="nvim ~/.zshrc"
 alias vi='nvim'
 alias v='vim'
-alias ls='lsd'
 alias lsa='lsd -a'
 alias ll='lsd -l'
 alias la='lsd -A'
@@ -69,7 +70,7 @@ zstyle ':completion:*' list-separator '-->'
 
 # cd後に自動でls
 function cd() {
-    builtin cd $@ && ls;
+    builtin cd $@ && lsd -a;
 }
 
 # NVM設定

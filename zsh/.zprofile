@@ -19,3 +19,4 @@ export PATH="$PATH:/Users/gou/.local/bin"
 
 # Amazon Q post block
 [[ -f "${HOME}/Library/Application Support/amazon-q/shell/zprofile.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zprofile.post.zsh"
+eval $(/opt/homebrew/bin/brew shellenv)
