@@ -241,6 +241,46 @@ main() {
         exit 1
     fi
     
+    # Voltaのインストール
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    progress_bar $CURRENT_STEP $TOTAL_STEPS
+    echo
+    log_info "Installing Volta..."
+    
+    if ! command -v volta &> /dev/null; then
+        curl https://get.volta.sh | bash &
+        spinner $!
+        
+        if [ $? -eq 0 ]; then
+            log_success "Volta installed successfully"
+            
+            # Node.jsとnpmのインストール
+            log_info "Installing Node.js and npm..."
+            volta install node@18.14.2 &
+            spinner $!
+            
+            if [ $? -eq 0 ]; then
+                volta install npm &
+                spinner $!
+                
+                if [ $? -eq 0 ]; then
+                    log_success "Node.js and npm installed successfully"
+                else
+                    log_error "Failed to install npm"
+                    exit 1
+                fi
+            else
+                log_error "Failed to install Node.js"
+                exit 1
+            fi
+        else
+            log_error "Failed to install Volta"
+            exit 1
+        fi
+    else
+        log_success "Volta is already installed"
+    fi
+    
     # zshの設定ファイルのシンボリックリンク作成
     log_info "Setting up Zsh configuration files..."
     
