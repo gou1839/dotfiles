@@ -1,0 +1,341 @@
+model = "gpt-5.6-sol"
+personality = "pragmatic"
+model_reasoning_effort = "xhigh"
+notify = [
+    "/Users/gou/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient",
+    "turn-ended",
+]
+
+[tui]
+notification_condition = "always"
+# Claude Code の ~/.claude/statusline.py と同等の情報を表示する
+# （Codex は組み込み項目の並びのみ指定可能。外部スクリプトは使えない）
+status_line = [
+  "model-with-reasoning",  # Claude: model + think（モデル名 + 推論レベル）
+  "thread-title",          # Claude: sess（スレッド名、未命名ならID）
+  "current-dir",           # Claude: dir
+  "approval-mode",         # Claude: mode（承認モード）
+  "context-used",          # Claude: ctx（コンテキスト使用率）
+  "estimated-thread-cost", # Claude: $（Enterprise のみ表示、それ以外は自動で省略）
+  "five-hour-limit",       # Claude: 5h
+  "weekly-limit",          # Claude: 7d
+]
+status_line_use_colors = true
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+"gpt-5.6-sol" = 2
+gpt-6-astra = 4
+
+[mcp_servers.eslint]
+args = ["@eslint/mcp@latest"]
+command = "npx"
+enabled = true
+
+[mcp_servers.serena]
+args = [
+    "--from",
+    "git+https://github.com/oraios/serena",
+    "serena",
+    "start-mcp-server",
+    "--context",
+    "ide-assistant",
+    "--enable-web-dashboard",
+    "false",
+]
+command = "uvx"
+enabled = false
+
+[mcp_servers.webstorm]
+url = "http://127.0.0.1:64342/stream"
+
+[mcp_servers.pencil]
+command = "/Applications/Pencil.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64"
+args = [
+    "--app",
+    "desktop",
+]
+
+[mcp_servers.node_repl]
+args = []
+command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = "/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/gou/.codex:/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules"
+CODEX_HOME = "/Users/gou/.codex"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+BROWSER_USE_TINYSKY_ENABLED = "1"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = ""
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = ""
+NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = ""
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.901.51231"
+NODE_REPL_TRUSTED_SERVICES = '{"browser":"/Users/gou/.codex/plugins/cache/openai-bundled/browser/26.901.51231/scripts/browser-service.mjs","sky":"@oai/sky/service"}'
+SKY_CUA_SERVICE_PATH = "/Users/gou/.codex/computer-use/Codex Computer Use.app"
+CODEX_CLI_PATH = "/Applications/ChatGPT.app/Contents/Resources/codex"
+
+[mcp_servers.computer-use]
+command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+args = ["mcp"]
+cwd = "."
+enabled = false
+
+[mcp_servers.HubSpotDev]
+command = "hs"
+args = [
+    "mcp",
+    "start",
+    "--ai-agent",
+    "claude",
+]
+
+[projects."/Users/gou/dotfiles"]
+trust_level = "trusted"
+
+[projects."/Users/gou/.codex"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/pj_croll/estimation-management-system"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/PlayGround/croll-ui-components-mcp"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/hakov"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/pj_nissan_haisya/nissan_low-cost_allocation_system"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Downloads/2026_docker_kosuke_uehara"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/toreissyo/.claude"]
+trust_level = "trusted"
+
+[projects."/Users/gou/.claude"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/toreissyo"]
+trust_level = "trusted"
+
+[projects."/Users/gou"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/fine_bakkin"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/fine_bakkin/api"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/fine_bakkin/mobile"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/cxa-email-sender"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/PlayGround"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/PlayGround/misumi_desgin_md/awesome-design-md"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/PlayGround/powerpoint"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Documents/Codex/2026-09-02/cloudflare-trust-hub-iso-27017-2015"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Documents/Codex/2026-09-02/cloudflare-trust-hub-iso-27017-2015-2"]
+trust_level = "trusted"
+
+[projects."/Users/gou/.codex/.chatgpt-projects/g-p-6a8e5f7543a08191b6f501f854b94e68"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Documents/Codex/2026-09-08/realtime-voice-chat"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Documents/ChatGPT/New project"]
+trust_level = "trusted"
+
+[projects."/Users/gou/Programing/PlayGround/iherb-ai"]
+trust_level = "trusted"
+
+[notice.model_migrations]
+"gpt-5.1-codex-max" = "gpt-5.4"
+"gpt-5.3-codex" = "gpt-5.4"
+
+[plugins."github@openai-curated"]
+enabled = true
+
+[plugins."google-drive@openai-curated"]
+enabled = true
+
+[plugins."figma@openai-curated-remote"]
+enabled = false
+
+[plugins."compact-plus@compact-plus"]
+enabled = true
+
+[plugins."codex-app-tools@openai-bundled"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."unified-computer-use@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = true
+
+[plugins."computer-use@openai-bundled"]
+enabled = true
+
+[plugins."warp@claude-code-warp"]
+enabled = true
+
+[plugins."code-review@claude-plugins-official"]
+enabled = true
+
+[plugins."context7@claude-plugins-official"]
+enabled = true
+
+[plugins."figma@claude-plugins-official"]
+enabled = true
+
+[plugins."frontend-design@claude-plugins-official"]
+enabled = true
+
+[plugins."github@claude-plugins-official"]
+enabled = true
+
+[plugins."serena@claude-plugins-official"]
+enabled = true
+
+[plugins."skill-creator@claude-plugins-official"]
+enabled = true
+
+[plugins."superpowers@claude-plugins-official"]
+enabled = true
+
+[plugins."typescript-lsp@claude-plugins-official"]
+enabled = true
+
+[plugins."codex@openai-codex"]
+enabled = true
+
+[apps.connector_68df038e0ba48191908c8434991bbac2.tools."figma.use_figma"]
+approval_mode = "approve"
+
+[marketplaces.compact-plus]
+last_updated = "2026-07-29T13:00:46Z"
+last_revision = "acb5b80a2daecc28d701929c934832393ca1f710"
+source_type = "git"
+source = "https://github.com/u-ichi/compact-plus.git"
+
+[marketplaces.openai-bundled]
+source_type = "local"
+source = "/Users/gou/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.openai-primary-runtime]
+source_type = "local"
+source = "/Users/gou/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[marketplaces.compact-plus-local]
+source_type = "local"
+source = "/Users/gou/.claude/plugins/data/compact-plus"
+
+[marketplaces.claude-code-warp]
+source_type = "git"
+source = "https://github.com/warpdotdev/claude-code-warp.git"
+
+[marketplaces.claude-plugins-official]
+source_type = "git"
+source = "https://github.com/anthropics/claude-plugins-official.git"
+
+[marketplaces.openai-codex]
+source_type = "git"
+source = "https://github.com/openai/codex-plugin-cc.git"
+
+[hooks.state]
+
+[hooks.state."compact-plus@compact-plus:hooks/hooks.json:pre_compact:1:0"]
+trusted_hash = "sha256:3d78125dbb507edfadfb509958d2c156f80a3e7ce616da68404fc0593765c6ac"
+
+[hooks.state."compact-plus@compact-plus:hooks/hooks.json:pre_compact:0:0"]
+trusted_hash = "sha256:b7a75e1f3b997451349c180c9e3bafeb0aa620b5f0e4049e4f128c538a5a6a8e"
+enabled = true
+
+[hooks.state."compact-plus@compact-plus:hooks/hooks.json:post_compact:0:0"]
+trusted_hash = "sha256:32913fbe428d22136f2a02383a89de53402970c6e402921840287cd51ef52672"
+enabled = true
+
+[hooks.state."compact-plus@compact-plus:hooks/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:1770ed84eedccc626d2bc65cf470b8c43d6c7267e93a807ce721e34aea6cfd70"
+
+[hooks.state."compact-plus@compact-plus:hooks/hooks.json:session_start:1:0"]
+trusted_hash = "sha256:c574242632ce52022ecccd44621a95559badb113fbeb65717c9eb52f164f8523"
+
+[hooks.state."compact-plus@compact-plus:hooks/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:9598f85c87542774f215addeadafb2136a5c203564526d4ab143933bf612a56a"
+
+[hooks.state."compact-plus@compact-plus:hooks/hooks.json:user_prompt_submit:1:0"]
+trusted_hash = "sha256:8c662b84c03bf281c10d0d24de9c973998e95e3348fc4d22508ba0cfd37c33d7"
+
+[hooks.state."/Users/gou/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:34f705257948ba35b53bec0dfc4609cc336e1b51322f3245bb38d33eca2e6dfc"
+
+[hooks.state."codex@openai-codex:hooks/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:e6b9df143de11443eb576c38874cf6e0c48358f948170948fdf630f1c047c098"
+
+[hooks.state."codex@openai-codex:hooks/hooks.json:session_end:0:0"]
+trusted_hash = "sha256:bc55a03ac0094c5deb4af95c405b75b34735f318b3d9bd64a2f9902973861606"
+
+[hooks.state."codex@openai-codex:hooks/hooks.json:stop:0:0"]
+trusted_hash = "sha256:3dfaa7e4f022570b260b8a8cf4ac7585c986175256b887a4723fac4f358a482f"
+
+[hooks.state."warp@claude-code-warp:hooks/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:b8a12698a4cb64d767edd82090f55ad4d6ffaae0e829a5ad6c0b13d1e1d749a0"
+
+[hooks.state."warp@claude-code-warp:hooks/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:645f5c88fe5517fb11be9028aba060bb4651ddde18cc4a702bca0593d9231435"
+
+[hooks.state."warp@claude-code-warp:hooks/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:6c0b0fe34d02f93b3bc6c122a2f10fd46f17a6a4664061a47532ed548122cfb9"
+
+[hooks.state."warp@claude-code-warp:hooks/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:61fd2273d74dce7604b6bb4e18bfa8da89ec59d4bde8ae4f90442bc3421b796b"
+
+[hooks.state."warp@claude-code-warp:hooks/hooks.json:stop:0:0"]
+trusted_hash = "sha256:092e9cb1a2e5c816e80f255ce10d61df5f02ee838626dd7e5cf344c219661fef"
+
+[desktop]
+followUpQueueMode = "steer"
+conversationDetailMode = "STEPS_COMMANDS"
+ambient-suggestions-enabled = true
+
+[desktop.external-agent-import-sync-item-types]
+SESSIONS = false
+PLUGINS = "original"
+MCP_SERVER_CONFIG = "original"
+HOOKS = "original"

@@ -1,1 +1,22 @@
-.zshenv
+.DS_Store
+**/.DS_Store
+
+# Editor/runtime generated files
+.config/nvim/.netrwhist
+__pycache__/
+*.pyc
+*.zwc
+*.old
+*.backup.*
+
+# Local-only or sensitive files
+.claude/settings.local.json
+.claude/history.jsonl
+.claude/cache/
+.claude/backups/
+.claude/paste-cache/
+.codex/auth.json
+.codex/history.jsonl
+.codex/logs*.sqlite*
+.codex/state*.sqlite*
+.codex/*_cache.json

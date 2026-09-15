@@ -1,349 +1,192 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# dotfiles setup.
+#
+#   ./setup.sh          link dotfiles into $HOME (default)
+#   ./setup.sh install  install tools with Homebrew, then link
+#
+# Supported: macOS (Apple Silicon / Intel) and Linux (via Homebrew on Linux).
+# macOS-only pieces (Rancher Desktop cask) are skipped elsewhere with a warning.
+set -euo pipefail
 
-# 色の定義
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-WHITE='\033[1;37m'
-NC='\033[0m' # No Color
+DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+OS="$(uname -s)"
 
-# アニメーション用
-SPINNER="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+info()    { printf '[INFO] %s\n' "$1"; }
+success() { printf '[OK] %s\n' "$1"; }
+warn()    { printf '[WARN] %s\n' "$1" >&2; }
+die()     { printf '[ERROR] %s\n' "$1" >&2; exit 1; }
 
-# スピナー関数
-spinner() {
-    local pid=$1
-    local delay=0.1
-    local spinstr=$SPINNER
-    echo -n " "
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
-        local temp=${spinstr#?}
-        printf " [%c]  " "$spinstr"
-        local spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
-        printf "\b\b\b\b\b\b"
+is_macos() { [[ "$OS" == "Darwin" ]]; }
+is_linux() { [[ "$OS" == "Linux" ]]; }
+
+link_file() {
+  local source="$1"
+  local target="$2"
+  local description="$3"
+
+  if [[ ! -e "$source" ]]; then
+    warn "Skip $description: source not found: $source"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$target")"
+
+  if [[ -L "$target" ]]; then
+    if [[ "$(readlink "$target")" == "$source" ]]; then
+      success "$description already linked"
+      return 0
+    fi
+    rm "$target"
+  elif [[ -e "$target" ]]; then
+    mv "$target" "${target}.backup.$(date +%Y%m%d_%H%M%S)"
+  fi
+
+  ln -s "$source" "$target"
+  success "$description -> $target"
+}
+
+# --- Homebrew -----------------------------------------------------------------
+
+find_brew() {
+  local candidate
+  for candidate in /opt/homebrew/bin/brew /usr/local/bin/brew \
+                   /home/linuxbrew/.linuxbrew/bin/brew "$HOME/.linuxbrew/bin/brew"; do
+    if [[ -x "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  command -v brew 2>/dev/null || return 1
+}
+
+ensure_brew() {
+  local brew
+  if brew="$(find_brew)"; then
+    eval "$("$brew" shellenv)"
+    return 0
+  fi
+
+  if is_linux; then
+    local missing=()
+    local dep
+    for dep in curl git gcc; do
+      command -v "$dep" >/dev/null 2>&1 || missing+=("$dep")
     done
-    printf "    \b\b\b\b"
-}
-
-# ログ関数
-log_info() {
-    echo -e "${CYAN}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[✓]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[✗]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[!]${NC} $1"
-}
-
-# プログレスバー関数
-progress_bar() {
-    local current=$1
-    local total=$2
-    local width=50
-    local percentage=$((current * 100 / total))
-    local completed=$((current * width / total))
-    local remaining=$((width - completed))
-    
-    printf "\r${BLUE}Progress: [${NC}"
-    printf "%${completed}s" | tr ' ' '█'
-    printf "%${remaining}s" | tr ' ' '░'
-    printf "${BLUE}] ${WHITE}%d%%${NC}" $percentage
-}
-
-# ヘッダー表示
-print_header() {
-    echo -e "${PURPLE}"
-    echo "╔════════════════════════════════════════════════════════════════╗"
-    echo "║                                                                ║"
-    echo "║                   🚀 DOTFILES SETUP SCRIPT 🚀                ║"
-    echo "║                                                                ║"
-    echo "║                     Let's make it awesome!                     ║"
-    echo "║                                                                ║"
-    echo "╚════════════════════════════════════════════════════════════════╝"
-    echo -e "${NC}\n"
-}
-
-# ファイルの存在確認とシンボリックリンク作成
-create_symlink() {
-    local source="$1"
-    local target="$2"
-    local description="$3"
-    
-    if [ -e "$source" ]; then
-        if [ -L "$target" ]; then
-            log_warning "$description already exists (symlink)"
-            rm "$target"
-        elif [ -e "$target" ]; then
-            log_warning "$description already exists (backing up)"
-            mv "$target" "${target}.backup.$(date +%Y%m%d_%H%M%S)"
-        fi
-        
-        ln -sf "$source" "$target" &
-        spinner $!
-        
-        if [ $? -eq 0 ]; then
-            log_success "$description linked successfully"
-        else
-            log_error "Failed to link $description"
-            return 1
-        fi
-    else
-        log_error "Source file not found: $source"
-        return 1
+    if (( ${#missing[@]} )); then
+      warn "Homebrew on Linux needs: ${missing[*]}"
+      warn "Debian/Ubuntu: sudo apt-get install -y build-essential procps curl file git"
+      warn "Fedora/RHEL:   sudo dnf group install -y development-tools && sudo dnf install -y procps-ng curl file git"
+      die "Install the prerequisites above, then re-run: $0 install"
     fi
+  elif ! is_macos; then
+    die "Unsupported OS: $OS (only macOS and Linux are supported)"
+  fi
+
+  info "Installing Homebrew"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  brew="$(find_brew)" || die "Homebrew installed but brew not found on PATH"
+  eval "$("$brew" shellenv)"
 }
 
-# メイン処理
+install_brew_package() {
+  local package="$1"
+
+  if brew list --formula "$package" >/dev/null 2>&1; then
+    success "$package is already installed"
+    return 0
+  fi
+
+  brew install "$package"
+}
+
+install_brew_cask() {
+  local cask="$1"
+
+  if ! is_macos; then
+    warn "Skip cask $cask: casks are macOS only"
+    return 0
+  fi
+
+  if brew list --cask "$cask" >/dev/null 2>&1; then
+    success "$cask is already installed"
+    return 0
+  fi
+
+  brew install --cask "$cask"
+}
+
+# --- tools ---------------------------------------------------------------------
+
+install_tools() {
+  ensure_brew
+
+  info "Installing command line tools"
+  # zsh: on Linux the login shell is often bash; install zsh so `chsh -s $(which zsh)` works.
+  local packages=(zsh git gh neovim lsd bat sshuttle mise rbenv docker)
+  local package
+  for package in "${packages[@]}"; do
+    install_brew_package "$package"
+  done
+
+  install_brew_cask rancher
+
+  info "Installing zsh plugins"
+  zsh -c "source '$DOTFILES_DIR/zsh/plugins.zsh' && zsh-plugins-install"
+
+  if [[ ! -f "$HOME/.local/share/nvim/site/pack/jetpack/opt/vim-jetpack/plugin/jetpack.vim" ]]; then
+    info "Installing vim-jetpack"
+    curl -fLo "$HOME/.local/share/nvim/site/pack/jetpack/opt/vim-jetpack/plugin/jetpack.vim" \
+      --create-dirs https://raw.githubusercontent.com/tani/vim-jetpack/master/plugin/jetpack.vim
+  fi
+
+  if is_linux && [[ "${SHELL##*/}" != "zsh" ]]; then
+    warn "Login shell is ${SHELL##*/}. Switch with: chsh -s \"\$(command -v zsh)\""
+  fi
+}
+
+# --- links -----------------------------------------------------------------------
+
+link_dotfiles() {
+  info "Linking dotfiles from $DOTFILES_DIR"
+
+  link_file "$DOTFILES_DIR/zsh/.zshenv"   "$HOME/.zshenv"   ".zshenv"
+  link_file "$DOTFILES_DIR/zsh/.zprofile" "$HOME/.zprofile" ".zprofile"
+  link_file "$DOTFILES_DIR/zsh/.zshrc"    "$HOME/.zshrc"    ".zshrc"
+  link_file "$DOTFILES_DIR/bash/.profile" "$HOME/.profile"  ".profile"
+  link_file "$DOTFILES_DIR/bash/.bashrc"  "$HOME/.bashrc"   ".bashrc"
+  link_file "$DOTFILES_DIR/.p10k.zsh"     "$HOME/.p10k.zsh" ".p10k.zsh"
+
+  link_file "$DOTFILES_DIR/.config/nvim"       "$HOME/.config/nvim"       "Neovim config"
+  link_file "$DOTFILES_DIR/.config/git/ignore" "$HOME/.config/git/ignore" "Git global ignore"
+
+  link_file "$DOTFILES_DIR/.claude/settings.json" "$HOME/.claude/settings.json" "Claude settings"
+  link_file "$DOTFILES_DIR/.claude/statusline.py" "$HOME/.claude/statusline.py" "Claude statusline"
+
+  if is_macos; then
+    link_file "$DOTFILES_DIR/.codex/config.toml"        "$HOME/.codex/config.toml"        "Codex config"
+  else
+    warn "Skip Codex config.toml: it contains macOS-only paths (see README)"
+  fi
+  link_file "$DOTFILES_DIR/.codex/rules/default.rules"  "$HOME/.codex/rules/default.rules"  "Codex default rules"
+  link_file "$DOTFILES_DIR/.codex/rules/pr_read_rules.md" "$HOME/.codex/rules/pr_read_rules.md" "Codex PR read rules"
+}
+
 main() {
-    print_header
-    
-    DOTFILES_DIR="$HOME/dotfiles"
-    
-    # ディレクトリ確認
-    if [ ! -d "$DOTFILES_DIR" ]; then
-        log_error "Dotfiles directory not found: $DOTFILES_DIR"
-        exit 1
-    fi
-    
-    log_info "Starting dotfiles setup..."
-    echo
-    
-    # 総ステップ数
-    TOTAL_STEPS=12  # 追加パッケージのインストールステップを追加
-    CURRENT_STEP=0
-    
-    # Homebrewのインストール
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    log_info "Checking Homebrew installation..."
-    
-    if ! command -v brew &> /dev/null; then
-        log_info "Installing Homebrew..."
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" &
-        spinner $!
-        
-        if [ $? -eq 0 ]; then
-            log_success "Homebrew installed successfully"
-        else
-            log_error "Failed to install Homebrew"
-            exit 1
-        fi
-    else
-        log_success "Homebrew is already installed"
-    fi
-    
-    # zplugのインストール
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    log_info "Checking zplug installation..."
-    
-    if [ ! -d "$HOME/.zplug" ]; then
-        log_info "Installing zplug..."
-        curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh &
-        spinner $!
-        
-        if [ $? -eq 0 ]; then
-            log_success "zplug installed successfully"
-            log_info "Other zsh plugins will be installed automatically via .zshrc"
-        else
-            log_error "Failed to install zplug"
-            exit 1
-        fi
-    else
-        log_success "zplug is already installed"
-    fi
-    
-    # Neovimのインストール
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    log_info "Checking Neovim installation..."
-    
-    if ! command -v nvim &> /dev/null; then
-        log_info "Installing Neovim..."
-        brew install neovim &
-        spinner $!
-        
-        if [ $? -eq 0 ]; then
-            log_success "Neovim installed successfully"
-        else
-            log_error "Failed to install Neovim"
-            exit 1
-        fi
-    else
-        log_success "Neovim is already installed"
-    fi
-    
-    # Jetpackのインストール
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    log_info "Checking Jetpack installation..."
-    
-    if [ ! -f "$HOME/.local/share/nvim/site/pack/jetpack/opt/vim-jetpack/plugin/jetpack.vim" ]; then
-        log_info "Installing Jetpack..."
-        curl -fLo ~/.local/share/nvim/site/pack/jetpack/opt/vim-jetpack/plugin/jetpack.vim --create-dirs https://raw.githubusercontent.com/tani/vim-jetpack/master/plugin/jetpack.vim &
-        spinner $!
-        
-        if [ $? -eq 0 ]; then
-            log_success "Jetpack installed successfully"
-            log_info "Other Neovim plugins will be installed automatically via init.lua"
-        else
-            log_error "Failed to install Jetpack"
-            exit 1
-        fi
-    else
-        log_success "Jetpack is already installed"
-    fi
-    
-    # コマンドラインツールのインストール
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    log_info "Installing command line tools..."
-    
-    brew install lsd bat gh nvm rbenv sshuttle git docker &
-    spinner $!
-    
-    if [ $? -eq 0 ]; then
-        log_success "Command line tools installed successfully"
-    else
-        log_error "Failed to install command line tools"
-        exit 1
-    fi
-    
-    # Rancher Desktopのインストール
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    log_info "Installing Rancher Desktop..."
-    
-    brew install --cask rancher &
-    spinner $!
-    
-    if [ $? -eq 0 ]; then
-        log_success "Rancher Desktop installed successfully"
-    else
-        log_error "Failed to install Rancher Desktop"
-        exit 1
-    fi
-    
-    # Voltaのインストール
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    log_info "Installing Volta..."
-    
-    if ! command -v volta &> /dev/null; then
-        curl https://get.volta.sh | bash &
-        spinner $!
-        
-        if [ $? -eq 0 ]; then
-            log_success "Volta installed successfully"
-            
-            # Node.jsとnpmのインストール
-            log_info "Installing Node.js and npm..."
-            volta install node@18.14.2 &
-            spinner $!
-            
-            if [ $? -eq 0 ]; then
-                volta install npm &
-                spinner $!
-                
-                if [ $? -eq 0 ]; then
-                    log_success "Node.js and npm installed successfully"
-                else
-                    log_error "Failed to install npm"
-                    exit 1
-                fi
-            else
-                log_error "Failed to install Node.js"
-                exit 1
-            fi
-        else
-            log_error "Failed to install Volta"
-            exit 1
-        fi
-    else
-        log_success "Volta is already installed"
-    fi
-    
-    # zshの設定ファイルのシンボリックリンク作成
-    log_info "Setting up Zsh configuration files..."
-    
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    create_symlink "$DOTFILES_DIR/zsh/.zshenv" "$HOME/.zshenv" ".zshenv"
-    
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS  
-    echo
-    create_symlink "$DOTFILES_DIR/zsh/.zprofile" "$HOME/.zprofile" ".zprofile"
-    
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    create_symlink "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc" ".zshrc"
-    
-    # Powerlevel10kの設定ファイル
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    log_info "Setting up Powerlevel10k configuration..."
-    create_symlink "$DOTFILES_DIR/.p10k.zsh" "$HOME/.p10k.zsh" ".p10k.zsh"
-    
-    # .configディレクトリが存在しない場合は作成
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    log_info "Setting up .config directory..."
-    if [ ! -d "$HOME/.config" ]; then
-        mkdir -p "$HOME/.config" &
-        spinner $!
-        log_success ".config directory created"
-    else
-        log_success ".config directory already exists"
-    fi
-    
-    # .configディレクトリ内のシンボリックリンク作成
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-    echo
-    log_info "Setting up application configurations..."
-    create_symlink "$DOTFILES_DIR/.config/nvim" "$HOME/.config/nvim" "Neovim config"
-    create_symlink "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml" "Starship config"
-    
-    # 完了メッセージ
-    echo
-    progress_bar $TOTAL_STEPS $TOTAL_STEPS
-    echo -e "\n"
-    
-    echo -e "${GREEN}"
-    echo "╔════════════════════════════════════════════════════════════════╗"
-    echo "║                                                                ║"
-    echo "║                    🎉 SETUP COMPLETED! 🎉                     ║"
-    echo "║                                                                ║"
-    echo "║              Your dotfiles are now ready to rock!              ║"
-    echo "║                                                                ║"
-    echo "╚════════════════════════════════════════════════════════════════╝"
-    echo -e "${NC}"
-    
-    log_info "Please restart your terminal or run 'source ~/.zshrc' to apply changes."
+  [[ -d "$DOTFILES_DIR" ]] || die "Dotfiles directory not found: $DOTFILES_DIR"
+
+  case "${1:-link}" in
+    install)
+      install_tools
+      link_dotfiles
+      ;;
+    link)
+      link_dotfiles
+      ;;
+    *)
+      printf 'Usage: %s [link|install]\n' "$0" >&2
+      exit 2
+      ;;
+  esac
 }
 
-# スクリプト実行
 main "$@"
