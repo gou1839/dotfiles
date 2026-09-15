@@ -1,95 +1,148 @@
-# 🚀 Dotfiles Setup Script
+# Dotfiles
 
-## 📁 ディレクトリ構成
+zsh / Neovim / Claude Code / Codex の設定を管理する dotfiles です。
+macOS を主環境としつつ、Linux でも同じ手順で使えるようにしています。
 
-```
-dotfiles/
-├── setup.sh                    # メインのセットアップスクリプト
-├── README.md                   # このファイル
-├── .p10k.zsh                   # Powerlevel10k設定
-├── zsh/
-│   ├── .zshenv                 # zsh環境変数設定
-│   ├── .zprofile              # zshプロファイル設定
-│   └── .zshrc                 # zshメイン設定
-└── .config/
-    ├── nvim/                  # Neovim設定
-    └── starship.toml          # Starshipプロンプト設定
-```
+## 使い方
 
-## 🚀 インストール・実行方法
-
-### 1. リポジトリをクローン
+リンクだけ作成する場合:
 
 ```bash
-git clone https://github.com/gou1839/dotfiles.git
-cd ~/dotfiles
-```
-
-### 2. セットアップスクリプトを実行
-
-```bash
-# 実行権限を付与
-chmod +x setup.sh
-
-# セットアップ実行
 ./setup.sh
 ```
 
-## 🎯 セットアップ内容
+Homebrew パッケージや zsh プラグインも含めてセットアップする場合:
 
-このスクリプトは以下のシンボリックリンクを作成するで：
-
-### Zsh設定ファイル
-- `~/dotfiles/zsh/.zshenv` → `~/.zshenv`
-- `~/dotfiles/zsh/.zprofile` → `~/.zprofile`
-- `~/dotfiles/zsh/.zshrc` → `~/.zshrc`
-
-### Powerlevel10k設定
-- `~/dotfiles/.p10k.zsh` → `~/.p10k.zsh`
-
-### アプリケーション設定
-- `~/dotfiles/.config/nvim` → `~/.config/nvim`
-- `~/dotfiles/.config/starship.toml` → `~/.config/starship.toml`
-
-
-## 🛡️ 安全機能
-
-### バックアップ機能
-既存のファイルがある場合は、自動でバックアップを作成するで：
-- `~/.zshrc.backup.20241225_143022` みたいな感じでタイムスタンプ付きでバックアップ
-
-### エラーハンドリング
-- ソースファイルが存在しない場合はエラー表示
-- dotfilesディレクトリが見つからない場合は処理を停止
-- シンボリックリンク作成に失敗した場合はエラー表示
-
-## 🔧 トラブルシューティング
-
-### よくある問題
-
-**Q: `Permission denied` エラーが出る**
 ```bash
-chmod +x setup.sh
+./setup.sh install
 ```
 
-**Q: dotfilesディレクトリが見つからない**
-- `~/dotfiles` にリポジトリがクローンされてるか確認
-- パスが正しいか確認
+既存ファイルがある場合は `*.backup.YYYYMMDD_HHMMSS` として退避してからシンボリックリンクを作成します。
+`DOTFILES_DIR` を指定しなければ、`setup.sh` があるディレクトリを dotfiles として扱います。
 
-**Q: 設定が反映されない**
+## 対応 OS
+
+| 項目 | macOS | Linux | 備考 |
+| --- | --- | --- | --- |
+| zsh (`.zshenv` / `.zprofile` / `.zshrc`) | ✅ | ✅ | パスはすべて `$HOME` 基準。ツールが無ければ該当設定をスキップ |
+| bash (`.profile` / `.bashrc`) | ✅ | ✅ | 最小構成 |
+| Powerlevel10k (`.p10k.zsh`) | ✅ | ✅ | Nerd Font が必要 |
+| Neovim (`.config/nvim`) | ✅ | ✅ | vim-jetpack は `setup.sh install` で導入 |
+| Git global ignore | ✅ | ✅ | |
+| Claude Code (`.claude/`) | ✅ | ✅ | hook / statusline は `$HOME` 基準 |
+| Codex `config.toml` | ✅ | ❌ | `/Applications/...` や `/Users/gou/...` を含むため Linux ではリンクしない |
+| Codex `rules/` | ✅ | ✅ | |
+| Homebrew によるツール導入 | ✅ | ✅ | Linux は Homebrew on Linux を利用。要 `curl` `git` `gcc` |
+| Rancher Desktop (cask) | ✅ | ❌ | Linux ではスキップ |
+
+Ubuntu 24.04 コンテナで `setup.sh link` → `zsh -i -l` が警告なしに起動することを確認しています。
+
+## zsh の起動時間
+
+`.zshrc` は起動時間を優先して構成しています（このマシンで約 0.9 秒 → 約 0.15 秒）。
+最初のプロンプト直前に `Started zsh in Nms` が表示されます。
+
+主な方針:
+
+- プラグインマネージャ（zplug）を廃止し、`zsh/plugins.zsh` で `git clone` したプラグインを直接 `source`
+- `compinit` の dump を `~/.cache/zsh/` に置き、1 日 1 回だけ再生成（それ以外は `-C`）
+- `gh` / `mise` の補完は生成結果をファイルにキャッシュし、バイナリが更新されたときだけ再生成
+- `rbenv init` は `rbenv` コマンドを初めて使うまで遅延（shims は PATH に直接追加）
+- 未使用だった nvm / zsh-async / dracula テーマ / zsh-abbr を削除
+
+### プラグイン管理
+
 ```bash
-# ターミナルを再起動するか
-source ~/.zshrc
+zsh-plugins-install   # 未インストールのプラグインを clone
+zsh-plugins-update    # 全プラグインを git pull
+zsh-plugins-clean     # リストから外したプラグインを削除
 ```
 
-## 📝 カスタマイズ
+プラグイン一覧は `zsh/plugins.zsh` の `ZSH_PLUGINS` で管理します。
+インストール先は `~/.local/share/zsh/plugins/` です。旧 `~/.zplug` は不要なので削除して構いません。
 
-スクリプトをカスタマイズしたい場合は、`setup.sh` の以下の部分を編集：
+## 管理対象
 
-- `DOTFILES_DIR`: dotfilesディレクトリのパス
-- `create_symlink` 関数の呼び出し部分: 追加したいシンボリックリンク
+### Shell
 
+- `~/.zshenv` -> `zsh/.zshenv`（Volta の PATH のみ）
+- `~/.zprofile` -> `zsh/.zprofile`（Homebrew、JetBrains Toolbox、pipx の PATH）
+- `~/.zshrc` -> `zsh/.zshrc`（対話シェル設定）
+- `zsh/plugins.zsh`（`.zshrc` から読み込むプラグインローダー。リンクはしない）
+- `~/.profile` -> `bash/.profile`
+- `~/.bashrc` -> `bash/.bashrc`
+- `~/.p10k.zsh` -> `.p10k.zsh`
 
----
+Kiro CLI / Amazon Q / Rancher Desktop が自動挿入するブロックは dotfiles には含めません。
+Rancher Desktop の PATH は `.zshrc` / `.bashrc` 側で `~/.rd/bin` を追加しているので、
+Rancher Desktop の設定で PATH の自動管理は「Manual」にしてください。
 
-**Happy coding! 🎉** 
+#### Powerlevel10k
+
+Powerlevel10k は Pure ベースの 2 行プロンプトです。
+
+1 行目の左側:
+
+- `user@host`: root または SSH のときだけ表示
+- current directory
+- Git status
+- previous command duration: 直前のコマンドが 5 秒以上かかったときだけ表示
+
+2 行目の左側:
+
+- Python virtualenv: 有効なときだけ `py:<name>` 形式で表示
+- prompt symbol: 成功時は `❯`、失敗時は赤い `❯`
+
+右プロンプトは現在未使用です。現在時刻の設定はありますが、`time` セグメントはコメントアウトしています。
+
+Git status は以下のように表示します。
+
+- `branch-name*`: staged / unstaged / untracked のいずれかがある
+- `branch-name ⇣`: remote より behind
+- `branch-name ⇡`: remote より ahead
+- `branch-name ⇣⇡`: remote と diverge
+- `@commit`: detached HEAD
+
+### Config
+
+- `~/.config/nvim` -> `.config/nvim`
+- `~/.config/git/ignore` -> `.config/git/ignore`
+
+### Claude
+
+- `~/.claude/settings.json` -> `.claude/settings.json`
+- `~/.claude/statusline.py` -> `.claude/statusline.py`
+
+履歴、cache、backup、local settings は管理しません。
+`SessionStart` hook の `herdr-agent-state.sh` は herdr が `~/.claude/hooks/` に配置するもので、
+存在しない環境では何もしません。
+
+`settings.json` に残っているマシン固有の値（意図的に触っていません）:
+
+- `extraKnownMarketplaces.compact-plus-local.source.path`: `/Users/gou/.claude/plugins/data/compact-plus`。
+  GitHub 版 `compact-plus@compact-plus` も有効になっているため、片方は不要な可能性があります
+- `autoMode.environment` の `Trusted repo`: Claude Code が自動生成した内容で、別リポジトリのパスを指しています
+
+### Codex
+
+- `~/.codex/config.toml` -> `.codex/config.toml`（macOS のみ）
+- `~/.codex/rules/default.rules` -> `.codex/rules/default.rules`
+- `~/.codex/rules/pr_read_rules.md` -> `.codex/rules/pr_read_rules.md`
+
+認証情報、履歴、SQLite DB、cache は管理しません。
+
+`config.toml` は Codex アプリが自動更新するファイルで、次のようなマシン固有の内容を含みます。
+他機種で使う場合は `[tui]` と `[mcp_servers.*]` の必要な部分だけを手で移してください。
+
+- `/Applications/Pencil.app`、`/Applications/ChatGPT.app` 配下の MCP サーバーパス
+- `/Users/gou/...` を含む `notify`、`NODE_REPL_*`、`marketplaces.*.source`
+- `[projects."..."]` の trust_level（このマシンのディレクトリ一覧）
+- `[hooks.state]` のハッシュ
+
+## 注意
+
+`setup.sh install` は Homebrew（無ければインストール）、zsh、git、gh、neovim、lsd、bat、sshuttle、mise、rbenv、docker、
+Rancher Desktop（macOS のみ）、zsh プラグイン、vim-jetpack をインストールします。
+既に必要なツールが入っている環境では、通常は `./setup.sh` だけで十分です。
+
+Node.js / pnpm は mise で管理しています。Volta は `~/.volta` が存在する場合だけ PATH に追加します。

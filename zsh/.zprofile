@@ -1,22 +1,23 @@
-# Amazon Q pre block
-[[ -f "${HOME}/Library/Application Support/amazon-q/shell/zprofile.pre.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zprofile.pre.zsh"
+# Login shells only: PATH and environment. Interactive settings live in .zshrc.
 
-# Python設定
-PATH="/Library/Frameworks/Python.framework/Versions/3.10/bin:${PATH}"
+typeset -U path PATH
 
-# Homebrew
-eval "$(/opt/homebrew/bin/brew shellenv)"
+# Homebrew: Apple Silicon, Intel macOS, Linuxbrew (system or per-user).
+for __brew in /opt/homebrew/bin/brew /usr/local/bin/brew \
+            /home/linuxbrew/.linuxbrew/bin/brew "$HOME/.linuxbrew/bin/brew"; do
+  if [[ -x "$__brew" ]]; then
+    eval "$("$__brew" shellenv)"
+    break
+  fi
+done
+unset __brew
 
-# JetBrains Toolbox
-export PATH="$PATH:/Users/gou/Library/Application Support/JetBrains/Toolbox/scripts"
+# JetBrains Toolbox shell scripts (macOS / Linux locations).
+for __jb in "$HOME/Library/Application Support/JetBrains/Toolbox/scripts" \
+          "$HOME/.local/share/JetBrains/Toolbox/scripts"; do
+  [[ -d "$__jb" ]] && path+=("$__jb")
+done
+unset __jb
 
-# Volta（Node.jsバージョン管理）
-export VOLTA_HOME="$HOME/.volta"
-export PATH="$VOLTA_HOME/bin:$PATH"
-
-# pipx
-export PATH="$PATH:/Users/gou/.local/bin"
-
-# Amazon Q post block
-[[ -f "${HOME}/Library/Application Support/amazon-q/shell/zprofile.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/amazon-q/shell/zprofile.post.zsh"
-eval $(/opt/homebrew/bin/brew shellenv)
+# pipx and other user-local installs.
+path+=("$HOME/.local/bin")
